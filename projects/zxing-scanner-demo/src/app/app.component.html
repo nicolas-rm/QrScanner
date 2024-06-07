@@ -1,0 +1,56 @@
+<div class="scanner-shell" [hidden]="!hasDevices">
+    <mat-menu #appMenu="matMenu">
+        <mat-selection-list>
+            <mat-list-option checkboxPosition="start" (click)="toggleTryHarder()" [selected]="tryHarder"> Enable Try-harder </mat-list-option>
+            <mat-list-option checkboxPosition="start" (click)="toggleTorch()" [selected]="torchEnabled" *ngIf="torchAvailable$ | async"> Flashlight </mat-list-option>
+        </mat-selection-list>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="openFormatsDialog()">Formatos de código</button>
+        <button mat-menu-item (click)="openInfoDialog()">Información</button>
+    </mat-menu>
+
+    <header>
+        <mat-form-field appearance="fill">
+            <mat-select [value]="deviceSelected" (valueChange)="onDeviceSelectChange($event)">
+                <mat-option value="">Selecciona una cámara</mat-option>
+                <mat-option *ngFor="let device of availableDevices" [value]="device.deviceId">{{ device.label }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <button mat-icon-button [matMenuTriggerFor]="appMenu">
+            <mat-icon>more_vert</mat-icon>
+        </button>
+    </header>
+
+    <zxing-scanner [torch]="torchEnabled" [device]="deviceCurrent" (deviceChange)="onDeviceChange($event)" (scanSuccess)="onCodeResult($event)" [formats]="formatsEnabled" [tryHarder]="tryHarder" (permissionResponse)="onHasPermission($event)" (camerasFound)="onCamerasFound($event)" (torchCompatible)="onTorchCompatible($event)"></zxing-scanner>
+
+    <section class="results" *ngIf="qrResultString">
+        <div>
+            <small>Resultado:</small>
+            <strong>{{ qrResultString }}</strong>
+        </div>
+        <button mat-icon-button (click)="clearResult()">&times;</button>
+    </section>
+</div>
+
+<ng-container *ngIf="hasPermission === undefined">
+    <h2>Esperando permiso de la cámara...</h2>
+
+    <blockquote>Si su dispositivo no tiene cámaras, no se le pedirán permisos.</blockquote>
+</ng-container>
+
+<ng-container *ngIf="hasPermission === false">
+    <h2>Le negaste el permiso a la cámara, no podemos escanear nada sin él. 😪</h2>
+</ng-container>
+
+<ng-container *ngIf="hasDevices === undefined">
+    <h2>No se pudieron buscar dispositivos.</h2>
+
+    <blockquote>Esto puede deberse a algún error de seguridad.</blockquote>
+</ng-container>
+
+<ng-container *ngIf="hasDevices === false">
+    <h2>No se encontraron dispositivos.</h2>
+
+    <blockquote>Esto puede deberse a que no hay cámaras disponibles o no se les permite acceder a ellas.</blockquote>
+</ng-container>
+
